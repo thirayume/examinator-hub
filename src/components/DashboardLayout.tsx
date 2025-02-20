@@ -2,6 +2,9 @@
 import { useState } from "react";
 import { Menu, X, Calendar, Users, FileText, Settings, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -10,6 +13,7 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const navItems = [
     { icon: Calendar, label: "Events", path: "/events" },
@@ -17,6 +21,16 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { icon: FileText, label: "Reports", path: "/reports" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate("/auth");
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -29,6 +43,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="h-full flex flex-col">
           <div className="px-6 py-8">
             <h1 className="text-2xl font-bold text-primary">ExamHub</h1>
+            {user && (
+              <p className="text-sm text-muted-foreground mt-2">
+                {user.email}
+              </p>
+            )}
           </div>
           
           <nav className="flex-1 px-3 py-4 space-y-1">
@@ -46,7 +65,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
           <div className="p-4 border-t">
             <button
-              onClick={() => {/* Implement logout */}}
+              onClick={handleLogout}
               className="nav-link text-destructive w-full"
             >
               <LogOut className="w-5 h-5" />
