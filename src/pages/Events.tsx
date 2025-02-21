@@ -1,7 +1,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Calendar, Plus, Search, Users, MapPin, Clock } from "lucide-react";
 import { useState } from "react";
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Event {
   id: string;
@@ -112,163 +112,163 @@ const Events = () => {
 
         {/* Create Event Dialog */}
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
-            <div className="bg-background rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
-              <h2 className="text-2xl font-bold mb-6">Create New Event</h2>
-              <form onSubmit={handleCreateEvent} className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Exam Type</label>
-                    <select 
-                      className="input-field"
-                      value={formData.examType}
-                      onChange={(e) => setFormData(prev => ({ ...prev, examType: e.target.value as EventFormData["examType"] }))}
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Event</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateEvent} className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Exam Type</label>
+                  <select 
+                    className="input-field"
+                    value={formData.examType}
+                    onChange={(e) => setFormData(prev => ({ ...prev, examType: e.target.value as EventFormData["examType"] }))}
+                  >
+                    <option value="TOEIC">TOEIC</option>
+                    <option value="TOEFL">TOEFL</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Event Title</label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="e.g., TOEIC Morning Session"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Event Date</label>
+                  <input
+                    type="date"
+                    className="input-field"
+                    value={formData.date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Venue</label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    value={formData.venue}
+                    onChange={(e) => setFormData(prev => ({ ...prev, venue: e.target.value }))}
+                    placeholder="e.g., Main Building - Room 101"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Registration Deadline</label>
+                  <input
+                    type="date"
+                    className="input-field"
+                    value={formData.registrationDeadline}
+                    onChange={(e) => setFormData(prev => ({ ...prev, registrationDeadline: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Price (THB)</label>
+                  <input
+                    type="number"
+                    className="input-field"
+                    value={formData.price}
+                    onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium">Time Slots</label>
+                    <button
+                      type="button"
+                      onClick={addTimeSlot}
+                      className="text-sm text-primary hover:text-primary/80"
                     >
-                      <option value="TOEIC">TOEIC</option>
-                      <option value="TOEFL">TOEFL</option>
-                      <option value="OTHER">Other</option>
-                    </select>
+                      + Add Time Slot
+                    </button>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Event Title</label>
-                    <input
-                      type="text"
-                      className="input-field"
-                      value={formData.title}
-                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      placeholder="e.g., TOEIC Morning Session"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Event Date</label>
-                    <input
-                      type="date"
-                      className="input-field"
-                      value={formData.date}
-                      onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Venue</label>
-                    <input
-                      type="text"
-                      className="input-field"
-                      value={formData.venue}
-                      onChange={(e) => setFormData(prev => ({ ...prev, venue: e.target.value }))}
-                      placeholder="e.g., Main Building - Room 101"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Registration Deadline</label>
-                    <input
-                      type="date"
-                      className="input-field"
-                      value={formData.registrationDeadline}
-                      onChange={(e) => setFormData(prev => ({ ...prev, registrationDeadline: e.target.value }))}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Price (THB)</label>
-                    <input
-                      type="number"
-                      className="input-field"
-                      value={formData.price}
-                      onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="block text-sm font-medium">Time Slots</label>
-                      <button
-                        type="button"
-                        onClick={addTimeSlot}
-                        className="text-sm text-primary hover:text-primary/80"
-                      >
-                        + Add Time Slot
-                      </button>
-                    </div>
-                    {formData.timeSlots.map((slot, index) => (
-                      <div key={index} className="flex gap-4 mb-2">
-                        <input
-                          type="time"
-                          className="input-field"
-                          value={slot.startTime}
-                          onChange={(e) => {
-                            const newSlots = [...formData.timeSlots];
-                            newSlots[index].startTime = e.target.value;
-                            setFormData(prev => ({ ...prev, timeSlots: newSlots }));
-                          }}
-                        />
-                        <input
-                          type="time"
-                          className="input-field"
-                          value={slot.endTime}
-                          onChange={(e) => {
-                            const newSlots = [...formData.timeSlots];
-                            newSlots[index].endTime = e.target.value;
-                            setFormData(prev => ({ ...prev, timeSlots: newSlots }));
-                          }}
-                        />
-                        <input
-                          type="number"
-                          className="input-field"
-                          placeholder="Seats"
-                          value={slot.availableSeats}
-                          onChange={(e) => {
-                            const newSlots = [...formData.timeSlots];
-                            newSlots[index].availableSeats = parseInt(e.target.value);
-                            setFormData(prev => ({ ...prev, timeSlots: newSlots }));
-                          }}
-                          min="1"
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Notification Days (before event)</label>
-                    <div className="flex gap-2">
+                  {formData.timeSlots.map((slot, index) => (
+                    <div key={index} className="flex gap-4 mb-2">
+                      <input
+                        type="time"
+                        className="input-field"
+                        value={slot.startTime}
+                        onChange={(e) => {
+                          const newSlots = [...formData.timeSlots];
+                          newSlots[index].startTime = e.target.value;
+                          setFormData(prev => ({ ...prev, timeSlots: newSlots }));
+                        }}
+                      />
+                      <input
+                        type="time"
+                        className="input-field"
+                        value={slot.endTime}
+                        onChange={(e) => {
+                          const newSlots = [...formData.timeSlots];
+                          newSlots[index].endTime = e.target.value;
+                          setFormData(prev => ({ ...prev, timeSlots: newSlots }));
+                        }}
+                      />
                       <input
                         type="number"
                         className="input-field"
-                        value={formData.notificationDays.join(", ")}
+                        placeholder="Seats"
+                        value={slot.availableSeats}
                         onChange={(e) => {
-                          const days = e.target.value.split(",").map(d => parseInt(d.trim())).filter(d => !isNaN(d));
-                          setFormData(prev => ({ ...prev, notificationDays: days }));
+                          const newSlots = [...formData.timeSlots];
+                          newSlots[index].availableSeats = parseInt(e.target.value);
+                          setFormData(prev => ({ ...prev, timeSlots: newSlots }));
                         }}
-                        placeholder="e.g., 7, 3, 1"
+                        min="1"
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">Enter days separated by commas (e.g., 7, 3, 1)</p>
-                  </div>
+                  ))}
                 </div>
 
-                <div className="flex justify-end gap-4 pt-4 border-t">
-                  <button
-                    type="button"
-                    onClick={() => setIsCreateDialogOpen(false)}
-                    className="px-4 py-2 border rounded-md hover:bg-accent"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn-primary"
-                  >
-                    Create Event
-                  </button>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Notification Days (before event)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      className="input-field"
+                      value={formData.notificationDays.join(", ")}
+                      onChange={(e) => {
+                        const days = e.target.value.split(",").map(d => parseInt(d.trim())).filter(d => !isNaN(d));
+                        setFormData(prev => ({ ...prev, notificationDays: days }));
+                      }}
+                      placeholder="e.g., 7, 3, 1"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Enter days separated by commas (e.g., 7, 3, 1)</p>
                 </div>
-              </form>
-            </div>
-          </div>
+              </div>
+
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateDialogOpen(false)}
+                  className="px-4 py-2 border rounded-md hover:bg-accent"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                >
+                  Create Event
+                </button>
+              </div>
+            </form>
+          </DialogContent>
         </Dialog>
 
         {/* Search and Filters */}
