@@ -75,6 +75,126 @@ export type Database = {
         }
         Relationships: []
       }
+      event_notifications: {
+        Row: {
+          created_at: string
+          days_before: number
+          event_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          days_before: number
+          event_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          days_before?: number
+          event_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_notifications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_time_slots: {
+        Row: {
+          available_seats: number
+          created_at: string
+          end_time: string
+          event_id: string
+          id: string
+          start_time: string
+          total_seats: number
+          updated_at: string
+        }
+        Insert: {
+          available_seats: number
+          created_at?: string
+          end_time: string
+          event_id: string
+          id?: string
+          start_time: string
+          total_seats: number
+          updated_at?: string
+        }
+        Update: {
+          available_seats?: number
+          created_at?: string
+          end_time?: string
+          event_id?: string
+          id?: string
+          start_time?: string
+          total_seats?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_time_slots_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          event_date: string
+          exam_type: string
+          id: string
+          price: number
+          registration_deadline: string
+          status: string
+          title: string
+          updated_at: string
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_date: string
+          exam_type: string
+          id?: string
+          price: number
+          registration_deadline: string
+          status?: string
+          title: string
+          updated_at?: string
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          event_date?: string
+          exam_type?: string
+          id?: string
+          price?: number
+          registration_deadline?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       news: {
         Row: {
           content: string
@@ -132,6 +252,69 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      venues: {
+        Row: {
+          address: string
+          capacity: number
+          created_at: string
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          capacity: number
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          capacity?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       website_settings: {
         Row: {
           created_at: string
@@ -167,7 +350,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "staff" | "student"
     }
     CompositeTypes: {
       [_ in never]: never

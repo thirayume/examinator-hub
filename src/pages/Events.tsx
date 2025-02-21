@@ -1,73 +1,144 @@
+
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Calendar, Plus, Search, Users, MapPin, Clock } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
-interface Event {
-  id: string;
-  title: string;
-  date: string;
-  time: string;
-  venue: string;
-  availableSeats: number;
-  totalSeats: number;
-  status: "upcoming" | "ongoing" | "completed" | "cancelled";
-}
-
-interface TimeSlot {
-  startTime: string;
-  endTime: string;
-  availableSeats: number;
-}
-
-interface EventFormData {
-  title: string;
-  date: string;
-  timeSlots: TimeSlot[];
-  venue: string;
-  notificationDays: number[];
-  examType: "TOEIC" | "TOEFL" | "OTHER";
-  registrationDeadline: string;
-  price: number;
-}
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import type { Event, Venue, EventTimeSlot } from "@/types/events";
 
 const Events = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [formData, setFormData] = useState<EventFormData>({
+  const [events, setEvents] = useState<Event[]>([]);
+  const [venues, setVenues] = useState<Venue[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  const [formData, setFormData] = useState({
     title: "",
-    date: "",
-    timeSlots: [{ startTime: "", endTime: "", availableSeats: 30 }],
-    venue: "",
-    notificationDays: [7, 3, 1],
-    examType: "TOEIC",
-    registrationDeadline: "",
-    price: 0
+    exam_type: "TOEIC" as const,
+    venue_id: "",
+    event_date: "",
+    registration_deadline: "",
+    price: 0,
+    timeSlots: [{ start_time: "", end_time: "", available_seats: 30, total_seats: 30 }],
+    notificationDays: [7, 3, 1]
   });
-  
-  // Placeholder data - will be replaced with actual API calls
-  const events: Event[] = [
-    {
-      id: "1",
-      title: "TOEIC Examination - Morning Session",
-      date: "2024-04-15",
-      time: "09:00 - 12:00",
-      venue: "Main Building - Room 101",
-      availableSeats: 25,
-      totalSeats: 30,
-      status: "upcoming"
-    },
-    {
-      id: "2",
-      title: "TOEFL Test - Afternoon Session",
-      date: "2024-04-15",
-      time: "14:00 - 17:00",
-      venue: "Main Building - Room 102",
-      availableSeats: 15,
-      totalSeats: 30,
-      status: "upcoming"
+
+  useEffect(() => {
+    fetchEvents();
+    fetchVenues();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("events")
+        .select(`
+          *,
+          venue:venues(*)
+        `)
+        .order('event_date', { ascending: true });
+
+      if (error) throw error;
+      setEvents(data);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to load events: " + error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
+
+  const fetchVenues = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("venues")
+        .select("*")
+        .eq("is_active", true)
+        .order('name');
+
+      if (error) throw error;
+      setVenues(data);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to load venues: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      // First create the event
+      const { data: eventData, error: eventError } = await supabase
+        .from("events")
+        .insert({
+          title: formData.title,
+          exam_type: formData.exam_type,
+          venue_id: formData.venue_id,
+          event_date: formData.event_date,
+          registration_deadline: formData.registration_deadline,
+          price: formData.price,
+          status: 'upcoming'
+        })
+        .select()
+        .single();
+
+      if (eventError) throw eventError;
+
+      // Then create time slots
+      const timeSlotPromises = formData.timeSlots.map(slot => 
+        supabase.from("event_time_slots").insert({
+          event_id: eventData.id,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          available_seats: slot.available_seats,
+          total_seats: slot.total_seats
+        })
+      );
+
+      // Create notification settings
+      const notificationPromises = formData.notificationDays.map(days =>
+        supabase.from("event_notifications").insert({
+          event_id: eventData.id,
+          days_before: days
+        })
+      );
+
+      await Promise.all([...timeSlotPromises, ...notificationPromises]);
+
+      toast({
+        title: "Success",
+        description: "Event created successfully",
+      });
+
+      setIsCreateDialogOpen(false);
+      fetchEvents();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to create event: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const addTimeSlot = () => {
+    setFormData(prev => ({
+      ...prev,
+      timeSlots: [...prev.timeSlots, { start_time: "", end_time: "", available_seats: 30, total_seats: 30 }]
+    }));
+  };
 
   const getStatusColor = (status: Event["status"]) => {
     switch (status) {
@@ -82,48 +153,40 @@ const Events = () => {
     }
   };
 
-  const handleCreateEvent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: Implement event creation with API
-    console.log("Creating event:", formData);
-    setIsCreateDialogOpen(false);
-  };
-
-  const addTimeSlot = () => {
-    setFormData(prev => ({
-      ...prev,
-      timeSlots: [...prev.timeSlots, { startTime: "", endTime: "", availableSeats: 30 }]
-    }));
-  };
+  const filteredEvents = events.filter(event =>
+    event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    event.exam_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    event.venue?.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <DashboardLayout>
       <div className="space-y-8">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Events</h1>
-          <button
-            onClick={() => setIsCreateDialogOpen(true)}
-            className="btn-primary"
-          >
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Create Event
-          </button>
+          </Button>
         </div>
 
         {/* Create Event Dialog */}
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Event</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreateEvent} className="space-y-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Exam Type</label>
+                  <Label>Exam Type</Label>
                   <select 
-                    className="input-field"
-                    value={formData.examType}
-                    onChange={(e) => setFormData(prev => ({ ...prev, examType: e.target.value as EventFormData["examType"] }))}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={formData.exam_type}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      exam_type: e.target.value as "TOEIC" | "TOEFL" | "OTHER"
+                    }))}
                   >
                     <option value="TOEIC">TOEIC</option>
                     <option value="TOEFL">TOEFL</option>
@@ -132,10 +195,8 @@ const Events = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Event Title</label>
-                  <input
-                    type="text"
-                    className="input-field"
+                  <Label>Event Title</Label>
+                  <Input
                     value={formData.title}
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                     placeholder="e.g., TOEIC Morning Session"
@@ -143,43 +204,51 @@ const Events = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Event Date</label>
-                  <input
+                  <Label>Venue</Label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={formData.venue_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, venue_id: e.target.value }))}
+                  >
+                    <option value="">Select a venue</option>
+                    {venues.map(venue => (
+                      <option key={venue.id} value={venue.id}>
+                        {venue.name} (Capacity: {venue.capacity})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <Label>Event Date</Label>
+                  <Input
                     type="date"
-                    className="input-field"
-                    value={formData.date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                    value={formData.event_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, event_date: e.target.value }))}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Venue</label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    value={formData.venue}
-                    onChange={(e) => setFormData(prev => ({ ...prev, venue: e.target.value }))}
-                    placeholder="e.g., Main Building - Room 101"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Registration Deadline</label>
-                  <input
+                  <Label>Registration Deadline</Label>
+                  <Input
                     type="date"
-                    className="input-field"
-                    value={formData.registrationDeadline}
-                    onChange={(e) => setFormData(prev => ({ ...prev, registrationDeadline: e.target.value }))}
+                    value={formData.registration_deadline}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      registration_deadline: e.target.value 
+                    }))}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Price (THB)</label>
-                  <input
+                  <Label>Price (THB)</Label>
+                  <Input
                     type="number"
-                    className="input-field"
                     value={formData.price}
-                    onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      price: parseFloat(e.target.value) 
+                    }))}
                     min="0"
                     step="0.01"
                   />
@@ -187,85 +256,87 @@ const Events = () => {
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium">Time Slots</label>
-                    <button
+                    <Label>Time Slots</Label>
+                    <Button
                       type="button"
+                      variant="outline"
                       onClick={addTimeSlot}
-                      className="text-sm text-primary hover:text-primary/80"
+                      className="text-sm"
                     >
-                      + Add Time Slot
-                    </button>
+                      Add Time Slot
+                    </Button>
                   </div>
                   {formData.timeSlots.map((slot, index) => (
                     <div key={index} className="flex gap-4 mb-2">
-                      <input
-                        type="time"
-                        className="input-field"
-                        value={slot.startTime}
-                        onChange={(e) => {
-                          const newSlots = [...formData.timeSlots];
-                          newSlots[index].startTime = e.target.value;
-                          setFormData(prev => ({ ...prev, timeSlots: newSlots }));
-                        }}
-                      />
-                      <input
-                        type="time"
-                        className="input-field"
-                        value={slot.endTime}
-                        onChange={(e) => {
-                          const newSlots = [...formData.timeSlots];
-                          newSlots[index].endTime = e.target.value;
-                          setFormData(prev => ({ ...prev, timeSlots: newSlots }));
-                        }}
-                      />
-                      <input
-                        type="number"
-                        className="input-field"
-                        placeholder="Seats"
-                        value={slot.availableSeats}
-                        onChange={(e) => {
-                          const newSlots = [...formData.timeSlots];
-                          newSlots[index].availableSeats = parseInt(e.target.value);
-                          setFormData(prev => ({ ...prev, timeSlots: newSlots }));
-                        }}
-                        min="1"
-                      />
+                      <div className="flex-1">
+                        <Input
+                          type="time"
+                          value={slot.start_time}
+                          onChange={(e) => {
+                            const newSlots = [...formData.timeSlots];
+                            newSlots[index].start_time = e.target.value;
+                            setFormData(prev => ({ ...prev, timeSlots: newSlots }));
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <Input
+                          type="time"
+                          value={slot.end_time}
+                          onChange={(e) => {
+                            const newSlots = [...formData.timeSlots];
+                            newSlots[index].end_time = e.target.value;
+                            setFormData(prev => ({ ...prev, timeSlots: newSlots }));
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <Input
+                          type="number"
+                          placeholder="Seats"
+                          value={slot.available_seats}
+                          onChange={(e) => {
+                            const newSlots = [...formData.timeSlots];
+                            newSlots[index].available_seats = parseInt(e.target.value);
+                            newSlots[index].total_seats = parseInt(e.target.value);
+                            setFormData(prev => ({ ...prev, timeSlots: newSlots }));
+                          }}
+                          min="1"
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Notification Days (before event)</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      className="input-field"
-                      value={formData.notificationDays.join(", ")}
-                      onChange={(e) => {
-                        const days = e.target.value.split(",").map(d => parseInt(d.trim())).filter(d => !isNaN(d));
-                        setFormData(prev => ({ ...prev, notificationDays: days }));
-                      }}
-                      placeholder="e.g., 7, 3, 1"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Enter days separated by commas (e.g., 7, 3, 1)</p>
+                  <Label>Notification Days (before event)</Label>
+                  <Input
+                    value={formData.notificationDays.join(", ")}
+                    onChange={(e) => {
+                      const days = e.target.value.split(",")
+                        .map(d => parseInt(d.trim()))
+                        .filter(d => !isNaN(d));
+                      setFormData(prev => ({ ...prev, notificationDays: days }));
+                    }}
+                    placeholder="e.g., 7, 3, 1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Enter days separated by commas (e.g., 7, 3, 1)
+                  </p>
                 </div>
               </div>
 
               <div className="flex justify-end gap-4">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => setIsCreateDialogOpen(false)}
-                  className="px-4 py-2 border rounded-md hover:bg-accent"
                 >
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                >
+                </Button>
+                <Button type="submit">
                   Create Event
-                </button>
+                </Button>
               </div>
             </form>
           </DialogContent>
@@ -274,11 +345,10 @@ const Events = () => {
         {/* Search and Filters */}
         <div className="flex gap-4 items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <input
-              type="text"
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
               placeholder="Search events..."
-              className="input-field pl-10"
+              className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -287,7 +357,7 @@ const Events = () => {
 
         {/* Events Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {events.map((event) => (
+          {filteredEvents.map((event) => (
             <div key={event.id} className="bg-card rounded-lg shadow p-6 card-hover">
               <div className="flex justify-between items-start mb-4">
                 <h3 className="font-semibold text-lg">{event.title}</h3>
@@ -299,32 +369,32 @@ const Events = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex items-center text-muted-foreground">
                   <Calendar className="w-4 h-4 mr-2" />
-                  {event.date}
-                </div>
-                <div className="flex items-center text-muted-foreground">
-                  <Clock className="w-4 h-4 mr-2" />
-                  {event.time}
+                  {new Date(event.event_date).toLocaleDateString()}
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <MapPin className="w-4 h-4 mr-2" />
-                  {event.venue}
+                  {event.venue?.name}
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <Users className="w-4 h-4 mr-2" />
-                  {event.availableSeats} seats available
+                  Registration deadline: {new Date(event.registration_deadline).toLocaleDateString()}
+                </div>
+                <div className="flex items-center text-muted-foreground">
+                  <Clock className="w-4 h-4 mr-2" />
+                  Price: ฿{event.price.toLocaleString()}
                 </div>
               </div>
 
               <div className="mt-4 pt-4 border-t flex justify-end space-x-2">
-                <button className="btn-primary">
+                <Button>
                   View Details
-                </button>
+                </Button>
               </div>
             </div>
           ))}
         </div>
 
-        {events.length === 0 && (
+        {filteredEvents.length === 0 && (
           <div className="bg-card rounded-lg shadow p-6 text-center">
             <p className="text-muted-foreground">No events found</p>
           </div>
