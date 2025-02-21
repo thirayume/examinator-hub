@@ -1,4 +1,3 @@
-
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +18,7 @@ const Events = () => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     title: "",
-    exam_type: "TOEIC" as const,
+    exam_type: "TOEIC" as Event["exam_type"],
     venue_id: "",
     event_date: "",
     registration_deadline: "",
@@ -44,7 +43,14 @@ const Events = () => {
         .order('event_date', { ascending: true });
 
       if (error) throw error;
-      setEvents(data);
+      
+      // Cast the exam_type to ensure it matches our type
+      const typedEvents = data?.map(event => ({
+        ...event,
+        exam_type: event.exam_type as Event["exam_type"]
+      }));
+
+      setEvents(typedEvents || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -89,7 +95,7 @@ const Events = () => {
           event_date: formData.event_date,
           registration_deadline: formData.registration_deadline,
           price: formData.price,
-          status: 'upcoming'
+          status: 'upcoming' as const
         })
         .select()
         .single();
@@ -185,7 +191,7 @@ const Events = () => {
                     value={formData.exam_type}
                     onChange={(e) => setFormData(prev => ({ 
                       ...prev, 
-                      exam_type: e.target.value as "TOEIC" | "TOEFL" | "OTHER"
+                      exam_type: e.target.value as Event["exam_type"]
                     }))}
                   >
                     <option value="TOEIC">TOEIC</option>
