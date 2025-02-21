@@ -1,3 +1,4 @@
+
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,10 +45,11 @@ const Events = () => {
 
       if (error) throw error;
       
-      // Cast the exam_type to ensure it matches our type
+      // Cast both exam_type and status to ensure they match our type
       const typedEvents = data?.map(event => ({
         ...event,
-        exam_type: event.exam_type as Event["exam_type"]
+        exam_type: event.exam_type as Event["exam_type"],
+        status: event.status as Event["status"]
       }));
 
       setEvents(typedEvents || []);
