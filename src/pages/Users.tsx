@@ -1,16 +1,19 @@
-
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, UserCog, Mail, Phone } from "lucide-react";
+import { Search, UserCog, Mail, Phone, Download, Users as UsersIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type UserProfile = Database["public"]["Tables"]["user_profiles"]["Row"];
+
+const ITEMS_PER_PAGE = 9;
 
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,6 +21,14 @@ const Users = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [roleFilter, setRoleFilter] = useState<UserProfile["role"] | "all">("all");
+  const [statistics, setStatistics] = useState({
+    total: 0,
+    students: 0,
+    staff: 0,
+    admin: 0,
+  });
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     first_name: "",
@@ -39,6 +50,15 @@ const Users = () => {
 
       if (error) throw error;
       setUsers(data);
+
+      // Calculate statistics
+      const stats = data.reduce((acc, user) => {
+        acc.total++;
+        acc[user.role + 's']++;
+        return acc;
+      }, { total: 0, students: 0, staff: 0, admin: 0 });
+
+      setStatistics(stats);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -96,11 +116,46 @@ const Users = () => {
     setIsEditDialogOpen(true);
   };
 
-  const filteredUsers = users.filter(user =>
-    user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = 
+      user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+    
+    return matchesSearch && matchesRole;
+  });
+
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
   );
+
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+
+  const exportUsers = () => {
+    const csvContent = [
+      ["First Name", "Last Name", "Email", "Phone", "Role"],
+      ...filteredUsers.map(user => [
+        user.first_name,
+        user.last_name,
+        user.email,
+        user.phone || "",
+        user.role
+      ])
+    ]
+    .map(row => row.join(","))
+    .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "users.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
 
   const getRoleBadgeColor = (role: UserProfile["role"]) => {
     switch (role) {
@@ -118,6 +173,50 @@ const Users = () => {
       <div className="space-y-8">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Users</h1>
+          <Button onClick={exportUsers}>
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+        </div>
+
+        {/* Statistics Cards */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <UsersIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{statistics.total}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Students</CardTitle>
+              <UsersIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{statistics.students}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Staff</CardTitle>
+              <UsersIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{statistics.staff}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Admins</CardTitle>
+              <UsersIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{statistics.admin}</div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Edit Dialog */}
@@ -188,7 +287,7 @@ const Users = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Search */}
+        {/* Search and Filters */}
         <div className="flex gap-4 items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -199,11 +298,25 @@ const Users = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          <Select
+            value={roleFilter}
+            onValueChange={(value) => setRoleFilter(value as typeof roleFilter)}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="student">Students</SelectItem>
+              <SelectItem value="staff">Staff</SelectItem>
+              <SelectItem value="admin">Admins</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Users Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredUsers.map((user) => (
+          {paginatedUsers.map((user) => (
             <div key={user.id} className="bg-card rounded-lg shadow p-6">
               <div className="flex justify-between items-start mb-4">
                 <h3 className="font-semibold text-lg">
@@ -236,6 +349,37 @@ const Users = () => {
             </div>
           ))}
         </div>
+
+        {/* Pagination */}
+        {filteredUsers.length > ITEMS_PER_PAGE && (
+          <div className="flex justify-center gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <Button
+                  key={i + 1}
+                  variant={currentPage === i + 1 ? "default" : "outline"}
+                  onClick={() => setCurrentPage(i + 1)}
+                >
+                  {i + 1}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
 
         {filteredUsers.length === 0 && !isLoading && (
           <div className="bg-card rounded-lg shadow p-6 text-center">
