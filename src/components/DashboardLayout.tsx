@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Menu, X, Calendar, Users, FileText, Settings, LogOut } from "lucide-react";
+import { Menu, X, Calendar, Users, FileText, Settings, LogOut, Building } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const navItems = [
     { icon: Calendar, label: "Events", path: "/events" },
     { icon: Users, label: "Users", path: "/users" },
+    { icon: Building, label: "Venues", path: "/venues" },
     { icon: FileText, label: "Reports", path: "/reports" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
