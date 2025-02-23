@@ -7,16 +7,18 @@ import type { Database } from "@/integrations/supabase/types";
 
 type UserProfile = Database["public"]["Tables"]["user_profiles"]["Row"];
 
+interface UserFormData {
+  first_name: string;
+  last_name: string;
+  phone: string;
+  role: UserProfile["role"];
+}
+
 interface UserEditDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  formData: {
-    first_name: string;
-    last_name: string;
-    phone: string;
-    role: UserProfile["role"];
-  };
-  onFormDataChange: (data: typeof formData) => void;
+  formData: UserFormData;
+  onFormDataChange: (data: UserFormData) => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
