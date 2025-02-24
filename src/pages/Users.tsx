@@ -53,7 +53,6 @@ const Users = () => {
       if (error) throw error;
       setUsers(data);
 
-      // Calculate statistics
       const stats = data.reduce((acc, user) => {
         acc.total++;
         acc[user.role + 's']++;
