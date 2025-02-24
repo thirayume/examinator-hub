@@ -9,13 +9,14 @@ import Venues from "@/pages/Venues";
 import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
+import { Outlet } from "react-router-dom";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/auth" element={<Auth />} />
-        <Route element={<AuthGuard />}>
+        <Route element={<AuthGuard><Outlet /></AuthGuard>}>
           <Route path="/" element={<Events />} />
           <Route path="/events" element={<Events />} />
           <Route path="/users" element={<Users />} />
