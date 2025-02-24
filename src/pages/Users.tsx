@@ -1,7 +1,6 @@
-
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Download, Users } from "lucide-react";
+import { Download, Users as UsersIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +14,7 @@ type UserProfile = Database["public"]["Tables"]["user_profiles"]["Row"];
 
 const ITEMS_PER_PAGE = 9;
 
-const Users = () => {
+const UsersPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -232,7 +231,7 @@ const Users = () => {
               Export CSV
             </Button>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Users className="w-4 h-4 mr-2" />
+              <UsersIcon className="w-4 h-4 mr-2" />
               Add User
             </Button>
           </div>
@@ -317,4 +316,4 @@ const Users = () => {
   );
 };
 
-export default Users;
+export default UsersPage;
