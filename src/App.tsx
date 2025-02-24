@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthGuard } from "@/components/AuthGuard";
 import Auth from "@/pages/Auth";
 import Events from "@/pages/Events";
-import Users from "@/pages/Users";
+import UsersPage from "@/pages/Users";
 import Venues from "@/pages/Venues";
 import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
@@ -21,7 +21,7 @@ function App() {
         <Route element={<AuthGuard><Outlet /></AuthGuard>}>
           <Route path="/dashboard" element={<Events />} />
           <Route path="/events" element={<Events />} />
-          <Route path="/users" element={<Users />} />
+          <Route path="/users" element={<UsersPage />} />
           <Route path="/venues" element={<Venues />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
