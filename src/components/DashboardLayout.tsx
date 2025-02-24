@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Menu, X, Calendar, Users, FileText, Settings, LogOut, Building } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +13,7 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
   const navItems = [
@@ -56,9 +57,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <Link
                 key={item.path}
                 to={item.path}
-                className="nav-link"
+                className={`flex items-center px-3 py-2 rounded-lg transition-colors hover:bg-accent ${
+                  location.pathname === item.path ? "bg-accent" : ""
+                }`}
               >
-                <item.icon className="w-5 h-5" />
+                <item.icon className="w-5 h-5 mr-3" />
                 <span>{item.label}</span>
               </Link>
             ))}
@@ -67,9 +70,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div className="p-4 border-t">
             <button
               onClick={handleLogout}
-              className="nav-link text-destructive w-full"
+              className="flex items-center px-3 py-2 w-full text-destructive rounded-lg transition-colors hover:bg-accent"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-5 h-5 mr-3" />
               <span>Logout</span>
             </button>
           </div>
