@@ -1,3 +1,4 @@
+
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ const ITEMS_PER_PAGE = 9;
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false); // New state
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,7 +37,7 @@ const Users = () => {
     last_name: "",
     phone: "",
     role: "student" as UserProfile["role"],
-    email: "" // New field for user creation
+    email: ""
   });
 
   useEffect(() => {
@@ -75,10 +76,9 @@ const Users = () => {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // First create the auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
-        password: 'temp' + Math.random().toString(36).slice(-8), // Generate a random temporary password
+        password: 'temp' + Math.random().toString(36).slice(-8),
         options: {
           data: {
             first_name: formData.first_name,
@@ -89,7 +89,6 @@ const Users = () => {
 
       if (authError) throw authError;
 
-      // Then update the user profile with additional details
       const { error: profileError } = await supabase
         .from("user_profiles")
         .update({
@@ -106,7 +105,14 @@ const Users = () => {
       });
 
       setIsCreateDialogOpen(false);
-      setFormData({ first_name: "", last_name: "", phone: "", role: "student", email: "" });
+      // Fix: Include email when resetting form data
+      setFormData({
+        first_name: "",
+        last_name: "",
+        phone: "",
+        role: "student",
+        email: ""
+      });
       fetchUsers();
     } catch (error: any) {
       toast({
@@ -141,7 +147,14 @@ const Users = () => {
 
       setIsEditDialogOpen(false);
       setSelectedUser(null);
-      setFormData({ first_name: "", last_name: "", phone: "", role: "student" });
+      // Fix: Include email when resetting form data
+      setFormData({
+        first_name: "",
+        last_name: "",
+        phone: "",
+        role: "student",
+        email: ""
+      });
       fetchUsers();
     } catch (error: any) {
       toast({
@@ -158,7 +171,8 @@ const Users = () => {
       first_name: user.first_name,
       last_name: user.last_name,
       phone: user.phone || "",
-      role: user.role
+      role: user.role,
+      email: user.email
     });
     setIsEditDialogOpen(true);
   };
