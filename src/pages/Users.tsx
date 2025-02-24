@@ -18,6 +18,7 @@ const ITEMS_PER_PAGE = 9;
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false); // New state
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,7 +35,8 @@ const Users = () => {
     first_name: "",
     last_name: "",
     phone: "",
-    role: "student" as UserProfile["role"]
+    role: "student" as UserProfile["role"],
+    email: "" // New field for user creation
   });
 
   useEffect(() => {
@@ -67,6 +69,51 @@ const Users = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      // First create the auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: 'temp' + Math.random().toString(36).slice(-8), // Generate a random temporary password
+        options: {
+          data: {
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+          }
+        }
+      });
+
+      if (authError) throw authError;
+
+      // Then update the user profile with additional details
+      const { error: profileError } = await supabase
+        .from("user_profiles")
+        .update({
+          phone: formData.phone,
+          role: formData.role
+        })
+        .eq('id', authData.user?.id);
+
+      if (profileError) throw profileError;
+
+      toast({
+        title: "Success",
+        description: "User created successfully. A confirmation email has been sent.",
+      });
+
+      setIsCreateDialogOpen(false);
+      setFormData({ first_name: "", last_name: "", phone: "", role: "student", email: "" });
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to create user: " + error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -173,10 +220,16 @@ const Users = () => {
       <div className="space-y-8">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Users</h1>
-          <Button onClick={exportUsers}>
-            <Download className="w-4 h-4 mr-2" />
-            Export CSV
-          </Button>
+          <div className="flex gap-4">
+            <Button onClick={exportUsers}>
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Users className="w-4 h-4 mr-2" />
+              Add User
+            </Button>
+          </div>
         </div>
 
         {/* Statistics Cards */}
@@ -218,6 +271,88 @@ const Users = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Create Dialog */}
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New User</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateUser} className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="Email address"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label>First Name</Label>
+                  <Input
+                    value={formData.first_name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
+                    placeholder="First name"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label>Last Name</Label>
+                  <Input
+                    value={formData.last_name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
+                    placeholder="Last name"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label>Phone</Label>
+                  <Input
+                    value={formData.phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="Phone number"
+                  />
+                </div>
+
+                <div>
+                  <Label>Role</Label>
+                  <select 
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={formData.role}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      role: e.target.value as UserProfile["role"]
+                    }))}
+                    required
+                  >
+                    <option value="student">Student</option>
+                    <option value="staff">Staff</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsCreateDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Create User
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
