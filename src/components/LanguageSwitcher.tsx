@@ -2,22 +2,24 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, Globe } from "lucide-react";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 
 const languageOptions = [
-  { code: "en", label: "English" },
-  { code: "th", label: "ไทย" },
-  { code: "zh", label: "中文" },
+  { code: "en", label: "English", nativeLabel: "English" },
+  { code: "th", label: "Thai", nativeLabel: "ไทย" },
+  { code: "zh", label: "Chinese", nativeLabel: "中文" },
 ];
 
 export function LanguageSwitcher() {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const [open, setOpen] = useState(false);
   
   const currentLanguage = languageOptions.find(
@@ -32,19 +34,21 @@ export function LanguageSwitcher() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="flex items-center gap-1">
-          {currentLanguage.label}
-          <ChevronDown className="h-4 w-4" />
+        <Button variant="outline" size="sm" className="flex items-center gap-1 h-9">
+          <Globe className="h-4 w-4 mr-1" />
+          {currentLanguage.nativeLabel}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuLabel>{t("common.selectLanguage")}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
         {languageOptions.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
             onClick={() => changeLanguage(lang.code)}
-            className="flex items-center justify-between"
+            className="flex items-center justify-between cursor-pointer"
           >
-            {lang.label}
+            <span>{lang.nativeLabel} ({lang.label})</span>
             {lang.code === i18n.language && (
               <Check className="h-4 w-4 text-primary" />
             )}
