@@ -128,7 +128,7 @@ const RegistrationDetail = () => {
             <RegistrationQrCode registrationCode={registration.registration_code} />
             
             {registration.payment_status === "pending" && (
-              <RegistrationActionCard type="payment" />
+              <RegistrationActionCard type="payment" registration={registration} />
             )}
             
             {registration.status === "confirmed" && (
