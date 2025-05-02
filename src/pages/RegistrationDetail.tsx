@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useRegistration, useUpdateRegistration } from "@/hooks/useRegistrations";
@@ -19,7 +18,7 @@ import { RegistrationError } from "@/components/registrations/RegistrationError"
 const RegistrationDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: registration, isLoading, isError } = useRegistration(id);
+  const { data: registration, isLoading, isError, error } = useRegistration(id);
   const updateRegistration = useUpdateRegistration();
   const { toast } = useToast();
 
@@ -56,7 +55,10 @@ const RegistrationDetail = () => {
   if (isError || !registration) {
     return (
       <DashboardLayout>
-        <RegistrationError onBack={() => navigate(-1)} />
+        <RegistrationError 
+          onBack={() => navigate(-1)} 
+          errorMessage={error instanceof Error ? error.message : undefined}
+        />
       </DashboardLayout>
     );
   }
