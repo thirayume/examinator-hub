@@ -195,6 +195,163 @@ export type Database = {
           },
         ]
       }
+      exam_schedule_rooms: {
+        Row: {
+          created_at: string
+          exam_schedule_id: string
+          id: string
+          room_id: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          exam_schedule_id: string
+          id?: string
+          room_id: string
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          exam_schedule_id?: string
+          id?: string
+          room_id?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_schedule_rooms_exam_schedule_id_fkey"
+            columns: ["exam_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "exam_schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_schedule_rooms_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_schedules: {
+        Row: {
+          created_at: string
+          date: string
+          exam_type_id: string
+          id: string
+          max_candidates: number | null
+          min_candidates: number | null
+          price: number
+          registration_deadline: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          exam_type_id: string
+          id?: string
+          max_candidates?: number | null
+          min_candidates?: number | null
+          price: number
+          registration_deadline: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          exam_type_id?: string
+          id?: string
+          max_candidates?: number | null
+          min_candidates?: number | null
+          price?: number
+          registration_deadline?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_schedules_exam_type_id_fkey"
+            columns: ["exam_type_id"]
+            isOneToOne: false
+            referencedRelation: "exam_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_sections: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          exam_type_id: string
+          id: string
+          name_key: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes: number
+          exam_type_id: string
+          id?: string
+          name_key: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          exam_type_id?: string
+          id?: string
+          name_key?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_sections_exam_type_id_fkey"
+            columns: ["exam_type_id"]
+            isOneToOne: false
+            referencedRelation: "exam_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_types: {
+        Row: {
+          code: string
+          created_at: string
+          description_key: string | null
+          id: string
+          name_key: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description_key?: string | null
+          id?: string
+          name_key: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description_key?: string | null
+          id?: string
+          name_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       news: {
         Row: {
           content: string
@@ -252,6 +409,114 @@ export type Database = {
         }
         Relationships: []
       }
+      registrations: {
+        Row: {
+          created_at: string
+          exam_schedule_id: string
+          id: string
+          payment_method: string | null
+          payment_reference: string | null
+          payment_status: string
+          registration_code: string
+          room_id: string | null
+          seat_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exam_schedule_id: string
+          id?: string
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          registration_code: string
+          room_id?: string | null
+          seat_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exam_schedule_id?: string
+          id?: string
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          registration_code?: string
+          room_id?: string | null
+          seat_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registrations_exam_schedule_id_fkey"
+            columns: ["exam_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "exam_schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "registrations_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "registrations_seat_id_fkey"
+            columns: ["seat_id"]
+            isOneToOne: false
+            referencedRelation: "room_seats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_seats: {
+        Row: {
+          column_number: number
+          created_at: string
+          id: string
+          is_available: boolean
+          label: string | null
+          room_id: string
+          row_number: number
+          updated_at: string
+        }
+        Insert: {
+          column_number: number
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          label?: string | null
+          room_id: string
+          row_number: number
+          updated_at?: string
+        }
+        Update: {
+          column_number?: number
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          label?: string | null
+          room_id?: string
+          row_number?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_seats_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_profiles: {
         Row: {
           created_at: string
@@ -285,11 +550,53 @@ export type Database = {
         }
         Relationships: []
       }
+      venue_rooms: {
+        Row: {
+          columns: number
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          rows: number
+          updated_at: string
+          venue_id: string
+        }
+        Insert: {
+          columns?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          rows?: number
+          updated_at?: string
+          venue_id: string
+        }
+        Update: {
+          columns?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          rows?: number
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_rooms_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venues: {
         Row: {
           address: string
           capacity: number
           created_at: string
+          has_rooms: boolean | null
           id: string
           is_active: boolean | null
           name: string
@@ -299,6 +606,7 @@ export type Database = {
           address: string
           capacity: number
           created_at?: string
+          has_rooms?: boolean | null
           id?: string
           is_active?: boolean | null
           name: string
@@ -308,6 +616,7 @@ export type Database = {
           address?: string
           capacity?: number
           created_at?: string
+          has_rooms?: boolean | null
           id?: string
           is_active?: boolean | null
           name?: string

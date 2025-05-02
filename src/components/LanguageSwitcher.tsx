@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Check, Globe } from "lucide-react";
@@ -12,7 +12,13 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 
-const languageOptions = [
+interface LanguageOption {
+  code: string;
+  label: string;
+  nativeLabel: string;
+}
+
+const languageOptions: LanguageOption[] = [
   { code: "en", label: "English", nativeLabel: "English" },
   { code: "th", label: "Thai", nativeLabel: "ไทย" },
   { code: "zh", label: "Chinese", nativeLabel: "中文" },
@@ -21,10 +27,14 @@ const languageOptions = [
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageOption>(languageOptions[0]);
   
-  const currentLanguage = languageOptions.find(
-    (lang) => lang.code === i18n.language
-  ) || languageOptions[0];
+  useEffect(() => {
+    const lang = languageOptions.find(
+      (lang) => lang.code === i18n.language
+    ) || languageOptions[0];
+    setCurrentLanguage(lang);
+  }, [i18n.language]);
 
   const changeLanguage = (code: string) => {
     i18n.changeLanguage(code);

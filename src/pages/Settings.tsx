@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { WebsiteSettings } from "@/types/website";
 
 const Settings = () => {
@@ -14,6 +15,7 @@ const Settings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchSettings();
@@ -30,8 +32,8 @@ const Settings = () => {
       setSettings(data);
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to load settings: " + error.message,
+        title: t("common.error"),
+        description: `${t("common.error")}: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -57,13 +59,13 @@ const Settings = () => {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Settings updated successfully",
+        title: t("common.success"),
+        description: t("common.success"),
       });
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to save settings: " + error.message,
+        title: t("common.error"),
+        description: `${t("common.error")}: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -74,7 +76,7 @@ const Settings = () => {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div>Loading...</div>
+        <div>{t("common.loading")}</div>
       </DashboardLayout>
     );
   }
@@ -83,15 +85,15 @@ const Settings = () => {
     <DashboardLayout>
       <div className="space-y-8">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Website Settings</h1>
+          <h1 className="text-3xl font-bold">{t("navigation.settings")}</h1>
           <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save Changes"}
+            {isSaving ? t("common.loading") : t("common.save")}
           </Button>
         </div>
 
         <div className="space-y-6 max-w-2xl">
           <div className="space-y-2">
-            <Label htmlFor="institute_name">Institute Name</Label>
+            <Label htmlFor="institute_name">{t("common.appName")}</Label>
             <Input
               id="institute_name"
               value={settings?.institute_name ?? ""}
@@ -104,7 +106,7 @@ const Settings = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="hero_title">Hero Title</Label>
+            <Label htmlFor="hero_title">{t("landing.heroTitle")}</Label>
             <Input
               id="hero_title"
               value={settings?.hero_title ?? ""}
@@ -117,7 +119,7 @@ const Settings = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="hero_subtitle">Hero Subtitle</Label>
+            <Label htmlFor="hero_subtitle">{t("landing.heroSubtitle")}</Label>
             <Textarea
               id="hero_subtitle"
               value={settings?.hero_subtitle ?? ""}
