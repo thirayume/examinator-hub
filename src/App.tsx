@@ -10,6 +10,9 @@ import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
+import Dashboard from "@/pages/Dashboard";
+import Registrations from "@/pages/Registrations";
+import RegistrationDetail from "@/pages/RegistrationDetail";
 import { Outlet } from "react-router-dom";
 
 function App() {
@@ -19,8 +22,10 @@ function App() {
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
         <Route element={<AuthGuard><Outlet /></AuthGuard>}>
-          <Route path="/dashboard" element={<Events />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/events" element={<Events />} />
+          <Route path="/registrations" element={<Registrations />} />
+          <Route path="/registrations/:id" element={<RegistrationDetail />} />
           <Route path="/users" element={<UsersPage />} />
           <Route path="/venues" element={<Venues />} />
           <Route path="/reports" element={<Reports />} />
