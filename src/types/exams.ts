@@ -27,7 +27,7 @@ export interface ExamSchedule {
   price: number;
   min_candidates: number | null;
   max_candidates: number | null;
-  status: 'draft' | 'active' | 'cancelled' | 'completed';
+  status: string; // Changed from specific string literals to accept any string value
   created_at: string;
   updated_at: string;
   exam_type?: ExamType;
@@ -42,17 +42,22 @@ export interface ExamScheduleRoom {
   updated_at: string;
 }
 
+import { VenueRoom, RoomSeat } from '@/types/venues';
+
 export interface Registration {
   id: string;
   user_id: string;
   exam_schedule_id: string;
   room_id: string | null;
   seat_id: string | null;
-  payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
+  payment_status: string; // Changed from specific string literals to accept any string value
   payment_method: string | null;
   payment_reference: string | null;
   registration_code: string;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'waitlisted';
+  status: string; // Changed from specific string literals to accept any string value
   created_at: string;
   updated_at: string;
+  exam_schedule?: ExamSchedule;
+  room?: VenueRoom;
+  seat?: RoomSeat;
 }

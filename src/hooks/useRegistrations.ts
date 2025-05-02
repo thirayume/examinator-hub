@@ -45,7 +45,7 @@ export function useUserRegistrations() {
         return [];
       }
       
-      return data;
+      return data as unknown as Registration[];
     },
   });
 }
@@ -71,7 +71,7 @@ export function useRegistration(id: string | undefined) {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as unknown as Registration;
     },
     enabled: !!id,
   });

@@ -88,7 +88,7 @@ export function useExamSchedules(filters?: {
       const { data, error } = await query.order('date', { ascending: true });
 
       if (error) throw error;
-      return data;
+      return data as unknown as ExamSchedule[];
     },
   });
 }
@@ -106,7 +106,7 @@ export function useExamSchedule(id: string | undefined) {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as unknown as ExamSchedule;
     },
     enabled: !!id,
   });
