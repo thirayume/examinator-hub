@@ -3,6 +3,8 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,6 +13,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,9 +51,12 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">ExamHub</h1>
-          <p className="text-muted-foreground mt-2">
-            {isSignUp ? "Create your account" : "Sign in to your account"}
+          <h1 className="text-2xl font-bold">{t("common.appName")}</h1>
+          <div className="flex justify-center mt-2">
+            <LanguageSwitcher />
+          </div>
+          <p className="text-muted-foreground mt-4">
+            {isSignUp ? t("auth.signUp") : t("auth.signIn")}
           </p>
         </div>
 
@@ -58,7 +64,7 @@ const Auth = () => {
           {isSignUp && (
             <div>
               <label htmlFor="username" className="block text-sm font-medium">
-                Username
+                {t("auth.firstName")}
               </label>
               <input
                 id="username"
@@ -74,7 +80,7 @@ const Auth = () => {
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium">
-              Email address
+              {t("auth.email")}
             </label>
             <input
               id="email"
@@ -89,7 +95,7 @@ const Auth = () => {
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium">
-              Password
+              {t("auth.password")}
             </label>
             <input
               id="password"
@@ -110,9 +116,9 @@ const Auth = () => {
             {isLoading ? (
               "Loading..."
             ) : isSignUp ? (
-              "Sign up"
+              t("auth.signUp")
             ) : (
-              "Sign in"
+              t("auth.signIn")
             )}
           </button>
 
@@ -122,8 +128,8 @@ const Auth = () => {
             className="w-full text-sm text-muted-foreground hover:text-foreground"
           >
             {isSignUp
-              ? "Already have an account? Sign in"
-              : "Don't have an account? Sign up"}
+              ? t("auth.signIn")
+              : t("auth.signUp")}
           </button>
         </form>
       </div>

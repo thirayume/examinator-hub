@@ -5,6 +5,8 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,13 +17,14 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const navItems = [
-    { icon: Calendar, label: "Events", path: "/events" },
-    { icon: Users, label: "Users", path: "/users" },
-    { icon: Building, label: "Venues", path: "/venues" },
-    { icon: FileText, label: "Reports", path: "/reports" },
-    { icon: Settings, label: "Settings", path: "/settings" },
+    { icon: Calendar, label: t("navigation.exams"), path: "/events" },
+    { icon: Users, label: t("navigation.home"), path: "/users" },
+    { icon: Building, label: t("navigation.venues"), path: "/venues" },
+    { icon: FileText, label: t("navigation.reports"), path: "/reports" },
+    { icon: Settings, label: t("navigation.settings"), path: "/settings" },
   ];
 
   const handleLogout = async () => {
@@ -44,7 +47,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       >
         <div className="h-full flex flex-col">
           <div className="px-6 py-8">
-            <h1 className="text-2xl font-bold text-primary">ExamHub</h1>
+            <h1 className="text-2xl font-bold text-primary">{t("common.appName")}</h1>
             {user && (
               <p className="text-sm text-muted-foreground mt-2">
                 {user.email}
@@ -73,7 +76,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               className="flex items-center px-3 py-2 w-full text-destructive rounded-lg transition-colors hover:bg-accent"
             >
               <LogOut className="w-5 h-5 mr-3" />
-              <span>Logout</span>
+              <span>{t("common.logout")}</span>
             </button>
           </div>
         </div>
@@ -92,6 +95,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <Menu className="w-6 h-6" />
             )}
           </button>
+          <LanguageSwitcher />
         </header>
         <main className="animate-fadeIn">
           {children}
