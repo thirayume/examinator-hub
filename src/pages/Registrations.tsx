@@ -3,7 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { useState } from "react";
 import { useExamSchedules } from "@/hooks/useExams";
 import { useCreateRegistration } from "@/hooks/useRegistrations";
-import { useVenueRooms } from "@/hooks/useVenues";
+import { useVenueRooms } from "@/hooks/venues/useRoomQueries";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
