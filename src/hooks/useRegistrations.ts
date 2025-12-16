@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Registration } from '@/types/exams';
 import { useToast } from '@/hooks/use-toast';
 import { nanoid } from 'nanoid';
+import { sanitizeError, logError } from '@/lib/error-utils';
 
 export function useUserRegistrations() {
   const { toast } = useToast();
@@ -37,9 +38,10 @@ export function useUserRegistrations() {
         .order('created_at', { ascending: false });
 
       if (error) {
+        logError('useUserRegistrations', error);
         toast({
           title: "Error",
-          description: "Failed to fetch registrations: " + error.message,
+          description: sanitizeError(error),
           variant: "destructive",
         });
         return [];

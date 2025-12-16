@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { WebsiteSettings } from "@/types/website";
+import { sanitizeError, logError } from "@/lib/error-utils";
 
 const Settings = () => {
   const [settings, setSettings] = useState<WebsiteSettings | null>(null);
@@ -30,10 +31,11 @@ const Settings = () => {
 
       if (error) throw error;
       setSettings(data);
-    } catch (error: any) {
+    } catch (error) {
+      logError('fetchSettings', error);
       toast({
         title: t("common.error"),
-        description: `${t("common.error")}: ${error.message}`,
+        description: sanitizeError(error),
         variant: "destructive",
       });
     } finally {
@@ -62,10 +64,11 @@ const Settings = () => {
         title: t("common.success"),
         description: t("common.success"),
       });
-    } catch (error: any) {
+    } catch (error) {
+      logError('handleSave:settings', error);
       toast({
         title: t("common.error"),
-        description: `${t("common.error")}: ${error.message}`,
+        description: sanitizeError(error),
         variant: "destructive",
       });
     } finally {

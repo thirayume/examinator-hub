@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Event, Venue, EventTimeSlot } from "@/types/events";
+import { sanitizeError, logError } from "@/lib/error-utils";
 
 const Events = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,10 +54,11 @@ const Events = () => {
       }));
 
       setEvents(typedEvents || []);
-    } catch (error: any) {
+    } catch (error) {
+      logError('fetchEvents', error);
       toast({
         title: "Error",
-        description: "Failed to load events: " + error.message,
+        description: sanitizeError(error),
         variant: "destructive",
       });
     } finally {
@@ -74,10 +76,11 @@ const Events = () => {
 
       if (error) throw error;
       setVenues(data);
-    } catch (error: any) {
+    } catch (error) {
+      logError('fetchVenues', error);
       toast({
         title: "Error",
-        description: "Failed to load venues: " + error.message,
+        description: sanitizeError(error),
         variant: "destructive",
       });
     }
@@ -132,10 +135,11 @@ const Events = () => {
 
       setIsCreateDialogOpen(false);
       fetchEvents();
-    } catch (error: any) {
+    } catch (error) {
+      logError('handleCreateEvent', error);
       toast({
         title: "Error",
-        description: "Failed to create event: " + error.message,
+        description: sanitizeError(error),
         variant: "destructive",
       });
     }
