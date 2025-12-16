@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateRegistration } from "@/hooks/useRegistrations";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeError, logError } from "@/lib/error-utils";
 
 interface PaymentVerificationFormProps {
   onVerify?: () => void;
@@ -19,7 +20,9 @@ export function PaymentVerificationForm({ onVerify }: PaymentVerificationFormPro
   const { toast } = useToast();
 
   const handleVerify = async () => {
-    if (!registrationCode.trim()) {
+    // Validate input
+    const trimmedCode = registrationCode.trim().toUpperCase();
+    if (!trimmedCode) {
       toast({
         title: "Registration code required",
         description: "Please enter a valid registration code",
@@ -28,21 +31,78 @@ export function PaymentVerificationForm({ onVerify }: PaymentVerificationFormPro
       return;
     }
 
+    // Validate code format (alphanumeric, max 20 chars)
+    if (!/^[A-Z0-9]{1,20}$/.test(trimmedCode)) {
+      toast({
+        title: "Invalid code format",
+        description: "Registration code must be alphanumeric",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // First, get the registration by code
-      const { data: registrationData } = await supabase
-        .from("registrations")
-        .select("*")
-        .eq("registration_code", registrationCode.trim())
+      // First, verify user has admin/staff role
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to verify payments",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check user role - must be admin or staff
+      const { data: userProfile, error: profileError } = await supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("id", userData.user.id)
         .single();
 
-      if (!registrationData) {
+      if (profileError || !userProfile) {
+        logError('PaymentVerificationForm:checkRole', profileError);
+        toast({
+          title: "Access denied",
+          description: "Unable to verify your permissions",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!['admin', 'staff'].includes(userProfile.role)) {
+        toast({
+          title: "Access denied",
+          description: "Only administrators and staff can verify payments",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Get the registration by code
+      const { data: registrationData, error: registrationError } = await supabase
+        .from("registrations")
+        .select("id, registration_code, payment_status, status")
+        .eq("registration_code", trimmedCode)
+        .single();
+
+      if (registrationError || !registrationData) {
+        logError('PaymentVerificationForm:findRegistration', registrationError);
         toast({
           title: "Registration not found",
           description: "No registration found with this code",
           variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if already paid
+      if (registrationData.payment_status === "paid") {
+        toast({
+          title: "Already verified",
+          description: "This registration has already been marked as paid",
         });
         return;
       }
@@ -65,10 +125,10 @@ export function PaymentVerificationForm({ onVerify }: PaymentVerificationFormPro
         onVerify();
       }
     } catch (error) {
-      console.error("Verification error:", error);
+      logError('PaymentVerificationForm:verify', error);
       toast({
         title: "Verification failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        description: sanitizeError(error),
         variant: "destructive",
       });
     } finally {
@@ -81,7 +141,7 @@ export function PaymentVerificationForm({ onVerify }: PaymentVerificationFormPro
       <CardHeader>
         <CardTitle>Verify Payment</CardTitle>
         <CardDescription>
-          Manually verify payment for a registration
+          Manually verify payment for a registration (Admin/Staff only)
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -92,7 +152,8 @@ export function PaymentVerificationForm({ onVerify }: PaymentVerificationFormPro
               id="registration-code"
               placeholder="Enter registration code"
               value={registrationCode}
-              onChange={(e) => setRegistrationCode(e.target.value)}
+              onChange={(e) => setRegistrationCode(e.target.value.toUpperCase())}
+              maxLength={20}
             />
           </div>
         </div>

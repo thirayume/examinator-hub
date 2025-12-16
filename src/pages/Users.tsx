@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { sanitizeError, logError } from "@/lib/error-utils";
+import { nanoid } from "nanoid";
 import { UserStatisticsCards } from "@/components/users/UserStatisticsCards";
 import { UserSearchAndFilter } from "@/components/users/UserSearchAndFilter";
 import { UserCard } from "@/components/users/UserCard";
@@ -59,10 +61,11 @@ const UsersPage = () => {
       }, { total: 0, students: 0, staff: 0, admin: 0 });
 
       setStatistics(stats);
-    } catch (error: any) {
+    } catch (error) {
+      logError('fetchUsers', error);
       toast({
         title: "Error",
-        description: "Failed to load users: " + error.message,
+        description: sanitizeError(error),
         variant: "destructive",
       });
     } finally {
@@ -73,9 +76,12 @@ const UsersPage = () => {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Use cryptographically secure random password
+      const tempPassword = nanoid(24);
+      
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
-        password: 'temp' + Math.random().toString(36).slice(-8),
+        password: tempPassword,
         options: {
           data: {
             first_name: formData.first_name,
@@ -110,10 +116,11 @@ const UsersPage = () => {
         email: ""
       });
       fetchUsers();
-    } catch (error: any) {
+    } catch (error) {
+      logError('handleCreateUser', error);
       toast({
         title: "Error",
-        description: "Failed to create user: " + error.message,
+        description: sanitizeError(error),
         variant: "destructive",
       });
     }
@@ -151,10 +158,11 @@ const UsersPage = () => {
         email: ""
       });
       fetchUsers();
-    } catch (error: any) {
+    } catch (error) {
+      logError('handleEditUser', error);
       toast({
         title: "Error",
-        description: "Failed to update user: " + error.message,
+        description: sanitizeError(error),
         variant: "destructive",
       });
     }

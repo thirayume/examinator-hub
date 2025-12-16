@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { sanitizeError, logError } from "@/lib/error-utils";
 
 type Venue = Database["public"]["Tables"]["venues"]["Row"];
 
@@ -60,10 +61,11 @@ const Venues = () => {
       }, { total: 0, active: 0, inactive: 0, totalCapacity: 0 });
 
       setStatistics(stats);
-    } catch (error: any) {
+    } catch (error) {
+      logError('fetchVenues', error);
       toast({
         title: "Error",
-        description: "Failed to load venues: " + error.message,
+        description: sanitizeError(error),
         variant: "destructive",
       });
     } finally {
@@ -88,10 +90,11 @@ const Venues = () => {
       setIsCreateDialogOpen(false);
       setFormData({ name: "", address: "", capacity: 0, is_active: true });
       fetchVenues();
-    } catch (error: any) {
+    } catch (error) {
+      logError('handleSubmit:venues', error);
       toast({
         title: "Error",
-        description: "Failed to create venue: " + error.message,
+        description: sanitizeError(error),
         variant: "destructive",
       });
     }
