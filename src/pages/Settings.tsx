@@ -1,4 +1,3 @@
-
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { WebsiteSettings } from "@/types/website";
 import { sanitizeError, logError } from "@/lib/error-utils";
+import { websiteSettingsSchema } from "@/lib/validation-schemas";
 
 const Settings = () => {
   const [settings, setSettings] = useState<WebsiteSettings | null>(null);
@@ -46,14 +46,33 @@ const Settings = () => {
   const handleSave = async () => {
     if (!settings) return;
 
+    // Validate input
+    const validationResult = websiteSettingsSchema.safeParse({
+      institute_name: settings.institute_name,
+      hero_title: settings.hero_title,
+      hero_subtitle: settings.hero_subtitle
+    });
+    
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast({
+        title: t("common.error"),
+        description: firstError.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const validatedData = validationResult.data;
+
     setIsSaving(true);
     try {
       const { error } = await supabase
         .from("website_settings")
         .update({
-          institute_name: settings.institute_name,
-          hero_title: settings.hero_title,
-          hero_subtitle: settings.hero_subtitle,
+          institute_name: validatedData.institute_name,
+          hero_title: validatedData.hero_title,
+          hero_subtitle: validatedData.hero_subtitle || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", settings.id);
