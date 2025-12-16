@@ -1,4 +1,3 @@
-
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { sanitizeError, logError } from "@/lib/error-utils";
+import { venueSchema } from "@/lib/validation-schemas";
 
 type Venue = Database["public"]["Tables"]["venues"]["Row"];
 
@@ -75,10 +75,30 @@ const Venues = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate input
+    const validationResult = venueSchema.safeParse(formData);
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast({
+        title: "Validation Error",
+        description: firstError.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const validatedData = validationResult.data;
+    
     try {
       const { error } = await supabase
         .from("venues")
-        .insert([formData]);
+        .insert([{
+          name: validatedData.name,
+          address: validatedData.address,
+          capacity: validatedData.capacity,
+          is_active: validatedData.is_active
+        }]);
 
       if (error) throw error;
 

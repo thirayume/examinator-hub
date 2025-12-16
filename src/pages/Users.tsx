@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { sanitizeError, logError } from "@/lib/error-utils";
+import { userSchema, userUpdateSchema } from "@/lib/validation-schemas";
 import { nanoid } from "nanoid";
 import { UserStatisticsCards } from "@/components/users/UserStatisticsCards";
 import { UserSearchAndFilter } from "@/components/users/UserSearchAndFilter";
@@ -75,17 +76,32 @@ const UsersPage = () => {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate input
+    const validationResult = userSchema.safeParse(formData);
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast({
+        title: "Validation Error",
+        description: firstError.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const validatedData = validationResult.data;
+    
     try {
       // Use cryptographically secure random password
       const tempPassword = nanoid(24);
       
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
+        email: validatedData.email,
         password: tempPassword,
         options: {
           data: {
-            first_name: formData.first_name,
-            last_name: formData.last_name,
+            first_name: validatedData.first_name,
+            last_name: validatedData.last_name,
           }
         }
       });
@@ -95,8 +111,8 @@ const UsersPage = () => {
       const { error: profileError } = await supabase
         .from("user_profiles")
         .update({
-          phone: formData.phone,
-          role: formData.role
+          phone: validatedData.phone || null,
+          role: validatedData.role
         })
         .eq('id', authData.user?.id);
 
@@ -130,14 +146,34 @@ const UsersPage = () => {
     e.preventDefault();
     if (!selectedUser) return;
 
+    // Validate input (without email for updates)
+    const validationResult = userUpdateSchema.safeParse({
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      phone: formData.phone,
+      role: formData.role
+    });
+    
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast({
+        title: "Validation Error",
+        description: firstError.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const validatedData = validationResult.data;
+
     try {
       const { error } = await supabase
         .from("user_profiles")
         .update({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          phone: formData.phone,
-          role: formData.role
+          first_name: validatedData.first_name,
+          last_name: validatedData.last_name,
+          phone: validatedData.phone || null,
+          role: validatedData.role
         })
         .eq('id', selectedUser.id);
 
